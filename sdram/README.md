@@ -26,6 +26,17 @@ to implement an SDRAM controller in order to interact with the SDRAM.
 
 I used the free version of model sim to simulate the testbench.
 
+To enable/disable debug output, modify the Debug variable. The testbench will output debug message to the
+ModelSim console. You can check when the model does actually perform READ and WRITE operations.
+
+To use the correct SDRAM hardware module that is used on the ULX3s, use the preprocessor define
+
+```
+`define MT48LC16M16
+```
+
+within the model file. 
+
 ## SDRAM Principles
 
 I do not understand the inner workings and physical principles of an SDRAM chip but it suffices to
@@ -72,8 +83,8 @@ The process to WRITE to memory is:
 
 1. Go through the initialization steps (only once).
 1. Call the ACTIVE command for bank, row.
+1. Provide data at the DQ port (the port for data)
 1. CALL the WRITE command for the column and to optionally activate auto-precharge.
-1. Write data via DQ (the port for data)
 1. Call the PRECHARGE command to writeback the data and to close the row.
 
 The process to READ from memory is:
@@ -81,7 +92,7 @@ The process to READ from memory is:
 1. Go through the initialization steps (only once).
 1. Call the ACTIVE command for bank, row 
 1. Call the READ command for column and to optionally activate auto-precharge.
-1. Read data from DQ (the port for data)
+1. Read data from the DQ port (the port for data)
 1. Call the PRECHARGE command to close the row.
 
 Make sure to wait the defined time-frames in between each step as the datasheet requests in order
@@ -97,8 +108,8 @@ executes currently before performing the NOP (no operation).
 The DQ port is an inout port where data to WRITE is provided in in-direction and data retrieved
 from memory during a READ command is provided in out-direction. The correct way is to use
 an assign that contains a condition which checks for the READ-operation. When a READ operation
-is happening, the the inout-port needs to be supplied with high impedance (z-value). That is
-the only way to read data from the inout port.
+is happening, the inout-port needs to be accessed with high impedance (z-value). That is
+the only way to properly read data from the inout port.
 
 ```
 wire [15:0] dq;
@@ -106,9 +117,24 @@ reg [15:0] dq_reg;
 assign dq = ({ cs, ras, cas, we } == 4'b0101) ? 16'bz : dq_reg;
 ```
 
+The 4'b0101 value is the code for the READ command!
+
 ## Initialization
 
 Here is a part of the testbench that is able to perform the initialization.
+
+The testbench performs initialization. Then it writes 0xFFFF into the very first cells of the
+first bank. Then it reads that value back. You should see the data in the simulators output wire
+view:
+
+![SDRAM_TestBench_WireView](res/SDRAM_TestBench_WireView.png)
+
+Using the console of ModelSim, it is possible to control the simulator using command line commands.
+The command
+```
+run 140000000
+```
+runs the entire testbench.
 
 The testbench assumes a 100 Mhz clock supplied to the SDRAM chip.
 First, set clock enable LOW.
