@@ -26,7 +26,7 @@ to implement an SDRAM controller in order to interact with the SDRAM.
 
 I used the free version of model sim to simulate the testbench.
 
-## SDRAM Working
+## SDRAM Principles
 
 I do not understand the inner workings and physical principles of an SDRAM chip but it suffices to
 read the datasheet in order to use the SDRAM chip.
@@ -57,23 +57,6 @@ have to close the row. The term PRECHARGE means to close a row. The PRECHARGE co
 and closes the row. PRECHARGE has some physical meaning that is not very important. Just remember that 
 PRECHARGE means to close a row.
 
-The process to WRITE to memory is:
-
-1. Go through the initialization steps (only once).
-2. Call the ACTIVE command for bank, row and column.
-3. Write data via DQ (the port for data)
-4. Call the PRECHARGE command to writeback the data and to close the row.
-
-The process to READ from memory is:
-
-1. Go through the initialization steps (only once).
-2. Call the ACTIVE command for bank, row and column.
-3. Read data from DQ (the port for data)
-4. Call the PRECHARGE command to close the row.
-
-Make sure to wait the defined time-frames in between each step as the datasheet requests in order
-to get the chip to actually execute the steps correctly.
-
 The exact coordinates (bank, row, column) to read from are specified using a combination of the
 ACTIVE command followe by either a READ or WRITE command:
 The ACTIVE command specifies the bank and the row. (The ACTIVE command cannot be used to activate auto precharge see below!)
@@ -84,6 +67,25 @@ only read a single burst once then immediately close the row again.
 In other words, if you do not plan to reuse the row. If auto precharge is active the row is
 close right after the command implicitly and no explicit PREACHARGE command needs to be executed.
 Auto precharge is activated by setting the 10th address bit A[10] to a HIGH value.
+
+The process to WRITE to memory is:
+
+1. Go through the initialization steps (only once).
+1. Call the ACTIVE command for bank, row.
+1. CALL the WRITE command for the column and to optionally activate auto-precharge.
+1. Write data via DQ (the port for data)
+1. Call the PRECHARGE command to writeback the data and to close the row.
+
+The process to READ from memory is:
+
+1. Go through the initialization steps (only once).
+1. Call the ACTIVE command for bank, row 
+1. Call the READ command for column and to optionally activate auto-precharge.
+1. Read data from DQ (the port for data)
+1. Call the PRECHARGE command to close the row.
+
+Make sure to wait the defined time-frames in between each step as the datasheet requests in order
+to get the chip to actually execute the steps correctly.
 
 It is enough to provide the command and settings on the ports of the SDRAM module for a single
 clock cycle. The SDRAM chip will start to execute the command. To keep the SDRAM module to
