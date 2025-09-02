@@ -127,7 +127,7 @@ The testbench performs initialization. Then it writes 0xFFFF into the very first
 first bank. Then it reads that value back. You should see the data in the simulators output wire
 view:
 
-![SDRAM_TestBench_WireView](res/SDRAM_TestBench_WireView.png)
+![SDRAM_TestBench_WireView](../res/SDRAM_TestBench_WireView.png)
 
 Using the console of ModelSim, it is possible to control the simulator using command line commands.
 The command
